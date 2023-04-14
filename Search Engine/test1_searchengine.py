@@ -38,7 +38,7 @@ for paragraph in df['content']:
 
 
 # Train Word2Vec model
-paragraphModel = gensim.models.Word2Vec(tokenized_paragraphs_lemma, window=5, min_count=1, workers=4)
+paragraphModel = gensim.models.Word2Vec(tokenized_paragraphs_lemma, window=20, min_count=1, workers=4)
 paragraphModel.save("paragraphModel")
 
 # Calculate the meaning vector per paragraph

@@ -6,16 +6,8 @@ import re
 import nltk
 from nltk.corpus import stopwords
 from gensim.models import Phrases
-
-nltk.download('stopwords')
-
-
-df = pd.read_json('posts.json')
-
-df['language'] = df['descripcion'].apply(detect)
-df=df[df['language']!= 'es'].drop('language', axis=1)
-
-corpus=df["descripcion"]
+from gensim.corpora import Dictionary
+from gensim.models import LdaModel
 
 nlp = spacy.load("en_core_web_lg")
 
@@ -54,14 +46,13 @@ contractions_dict = { "ain’t": "are not", "’s":" is", "aren’t": "are not",
                      "you’ll": "you will", "you’ll’ve": "you will have", "you’re": "you are",
                      "you’ve": "you have"}
 
-contractions_re = re.compile('(%s)'%'|'.join(contractions_dict.keys()))
 
 def expand_contractions(s, contractions_dict=contractions_dict):
+  contractions_re = re.compile('(%s)'%'|'.join(contractions_dict.keys()))
   def replace(match):
     return contractions_dict[match.group(0)]
   return contractions_re.sub(replace, s)
 
-corpus = corpus.apply(expand_contractions)
 
 def clean_hashtag_url(post):
     """
@@ -92,6 +83,7 @@ def preprocess(post):
     clean_text = post.translate(str.maketrans("", "", string.punctuation))
     clean_text = clean_text.replace("\n", " ")
     clean_text = clean_text.replace("\u200d", "")
+    clean_text = clean_text.replace("\u200b", "")
     clean_text = clean_text.replace("▪", "")
     clean_text = clean_text.replace("’", "")
     clean_text = clean_text.replace("”", "")
@@ -101,11 +93,6 @@ def preprocess(post):
     clean_text = " ".join(clean_text.split())
     
     return clean_text
-
-corpus = corpus.apply(clean_hashtag_url)
-corpus = corpus.apply(preprocess)
-
-
 
 def rules(token):
     """
@@ -126,36 +113,55 @@ def corpus_cleaning(posts):
     
     for post in nlp.pipe(posts.apply(rm_pattern)):
         yield ' '.join([token.lemma_ for token in post if all(rules(token))])
-        
-preprocessed_posts = corpus_cleaning(corpus)
-streamed_posts = (post.split(' ') for post in preprocessed_posts)
-all_posts = []
 
-for streamed_post in streamed_posts:
-    post = ' '.join(streamed_post)
-    all_posts.append(post)
+def main_token(json_name,column_name_corpus):
+
+    nltk.download('stopwords')
+    df = pd.read_json(json_name)
+
+    df['language'] = df[column_name_corpus].apply(detect)
+    df=df[df['language']!= 'es'].drop('language', axis=1)
+
+    corpus=df[column_name_corpus]
+
+    corpus = corpus.apply(expand_contractions)
+
+    corpus = corpus.apply(clean_hashtag_url)
+    corpus = corpus.apply(preprocess)
+
+    preprocessed_posts = corpus_cleaning(corpus)
+    streamed_posts = (post.split(' ') for post in preprocessed_posts)
+    all_posts = []
+    for streamed_post in streamed_posts:
+        post = ' '.join(streamed_post)
+        all_posts.append(post)
+
+    # Process after cleaning
+
+    df['descripcion_clean'] = all_posts
+
+    preprocessed_posts = corpus_cleaning(corpus)
+    streamed_posts = (post.split(' ') for post in preprocessed_posts)
+    bigram_model = Phrases(streamed_posts,min_count=5,threshold=10)
+
+    bigram_posts = []
+
+    preprocessed_posts = corpus_cleaning(corpus)
+    streamed_posts = (post.split(' ') for post in preprocessed_posts)
+
+    for streamed_post in streamed_posts:
+        bigram_post = ' '.join(bigram_model[streamed_post])
+        bigram_posts.append(bigram_post)
+
+    clean_corpus=bigram_posts
+
+    return clean_corpus
     
-print(all_posts)
 
-# Process after cleaning
+if __name__ == "__main__":
+    clean_corpus=main_token("accenture_linkedin.json","content")
+    print(clean_corpus)
 
-df['descripcion_clean'] = all_posts
-
-
-preprocessed_posts = corpus_cleaning(corpus)
-streamed_posts = (post.split(' ') for post in preprocessed_posts)
-bigram_model = Phrases(streamed_posts,min_count=5,threshold=10)
-
-bigram_posts = []
-
-preprocessed_posts = corpus_cleaning(corpus)
-streamed_posts = (post.split(' ') for post in preprocessed_posts)
-
-for streamed_post in streamed_posts:
-    bigram_post = ' '.join(bigram_model[streamed_post])
-    bigram_posts.append(bigram_post)
-
-print(bigram_posts)
 
 
 

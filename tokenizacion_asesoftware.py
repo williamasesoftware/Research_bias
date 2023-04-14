@@ -5,6 +5,7 @@ from langdetect import detect
 import re 
 import nltk
 from nltk.corpus import stopwords
+from gensim.models import Phrases
 
 nltk.download('stopwords')
 
@@ -136,5 +137,26 @@ for streamed_post in streamed_posts:
     
 print(all_posts)
 
-        
-        
+# Process after cleaning
+
+df['descripcion_clean'] = all_posts
+
+
+preprocessed_posts = corpus_cleaning(corpus)
+streamed_posts = (post.split(' ') for post in preprocessed_posts)
+bigram_model = Phrases(streamed_posts,min_count=5,threshold=10)
+
+bigram_posts = []
+
+preprocessed_posts = corpus_cleaning(corpus)
+streamed_posts = (post.split(' ') for post in preprocessed_posts)
+
+for streamed_post in streamed_posts:
+    bigram_post = ' '.join(bigram_model[streamed_post])
+    bigram_posts.append(bigram_post)
+
+print(bigram_posts)
+
+
+
+

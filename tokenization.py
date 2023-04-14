@@ -88,7 +88,7 @@ def preprocess(post):
     clean_text = clean_text.replace("’", "")
     clean_text = clean_text.replace("”", "")
     clean_text = clean_text.lower()
-    stop_words = set(stopwords.words('english'))
+    stop_words = set(stopwords.words('english')) - {'we', 'i', 'you', 'our', 'himself', 'herself', 'him', 'hers', 'his', 'her', 'ourselves', 'themselves', 'ours'}
     clean_text = " ".join([word for word in clean_text.split() if word not in stop_words])
     clean_text = " ".join(clean_text.split())
     

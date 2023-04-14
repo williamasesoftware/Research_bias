@@ -29,7 +29,7 @@ def preprocess_text_lemma(text):
 
 # apply pre-processing and tokenization to the 'content' column of each row
 tokenized_paragraphs_lemma = []
-for paragraph in df['content']:
+for paragraph in df_lemma['content']:
     tokens = preprocess_text_lemma(paragraph)
     tokenized_paragraphs_lemma.append(tokens)
 
@@ -37,8 +37,8 @@ for paragraph in df['content']:
 ####################################################################################################
 
 
-# Train Word2Vec model
-paragraphModel = gensim.models.Word2Vec(tokenized_paragraphs_lemma, window=5, min_count=1, workers=4)
+# Train Word2Vec paragraphModel
+paragraphModel = gensim.models.Word2Vec(tokenized_paragraphs_lemma, window=20, min_count=1, workers=4)
 paragraphModel.save("paragraphModel")
 
 # Calculate the meaning vector per paragraph
@@ -51,7 +51,7 @@ for paragraph_tokens in tokenized_paragraphs_lemma:
     if len(vectors) > 0:
         paragraph_vectors_lemma.append(np.mean(vectors, axis=0))
     else:
-        paragraph_vectors_lemma.append(np.zeros(model.vector_size))
+        paragraph_vectors_lemma.append(np.zeros(paragraphModel.vector_size))
 
 
 
@@ -122,4 +122,4 @@ if word_count > 0:
 
 var=cosine_similarity_list(df_lemma['vector'],promptVector)  ## Es esta variable se guardan dos posibles respuestas var[1][1] o var[0][1]
 
-df["content"][var[0][1]]  ## Esto es el parrafo 
+df_lemma["content"][var[0][1]]  ## Esto es el parrafo 

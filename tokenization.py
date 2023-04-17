@@ -88,7 +88,7 @@ def preprocess(post):
     clean_text = clean_text.replace("’", "")
     clean_text = clean_text.replace("”", "")
     clean_text = clean_text.lower()
-    stop_words = set(stopwords.words('english')) - {'we', 'i', 'you', 'our', 'himself', 'herself', 'him', 'hers', 'his', 'her', 'ourselves', 'themselves', 'ours'}
+    stop_words = set(stopwords.words('english'))# - {'we', 'i', 'you', 'our', 'himself', 'herself', 'him', 'hers', 'his', 'her', 'ourselves', 'themselves', 'ours'}
     clean_text = " ".join([word for word in clean_text.split() if word not in stop_words])
     clean_text = " ".join(clean_text.split())
     
@@ -117,7 +117,10 @@ def corpus_cleaning(posts):
 def main_token(json_name,column_name_corpus):
 
     nltk.download('stopwords')
-    df = pd.read_json(json_name)
+    if ".csv" in json_name:
+     df = pd.read_csv(json_name)
+    else:
+        df = pd.read_json(json_name)
 
     df['language'] = df[column_name_corpus].apply(detect)
     df=df[df['language']!= 'es'].drop('language', axis=1)

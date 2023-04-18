@@ -48,23 +48,77 @@ contractions_dict = { "ain’t": "are not", "’s":" is", "aren’t": "are not",
 
 
 def expand_contractions(s, contractions_dict=contractions_dict):
-  contractions_re = re.compile('(%s)'%'|'.join(contractions_dict.keys()))
-  def replace(match):
-    return contractions_dict[match.group(0)]
-  return contractions_re.sub(replace, s)
+
+    """
+    Replace contractions in a string with their expanded form.
+
+    Args:
+    - s: str, input string to expand contractions
+    - contractions_dict: dict, a dictionary of contractions and their corresponding expanded form
+
+    Returns:
+    - str, the input string with contractions replaced by their expanded form
+    """
+
+    contractions_re = re.compile('(%s)'%'|'.join(contractions_dict.keys()))
+    def replace(match):
+        return contractions_dict[match.group(0)]
+    return contractions_re.sub(replace, s)
 
 def clean_hashtag_url(post):
+
+    """
+    Remove hashtags and URLs from a string.
+
+    Args:
+    - post: str, the input string to clean
+    
+    Returns:
+    - str, the input string with hashtags and URLs removed
+    """
     return " ".join(word for word in post.split(' ') if ("#" not in word and "http" not in word))
 
 def punct_space(token):
+
+    """
+    Check if a token is a punctuation or a space.
+
+    Args:
+    - token: spacy.Token, a token from a spacy document
+    
+    Returns:
+    - bool, True if the token is a punctuation or a space, False otherwise
+    """
+
     return token.is_punct or token.is_space
 
 def rm_pattern(post):
+
+    """
+    Remove specific patterns from a string.
+
+    Args:
+    - post: str, the input string to remove patterns from
+    
+    Returns:
+    - str, the input string with the specified patterns removed
+    """
+
     post = re.sub("…see more",'', post) 
     post = re.sub('http','',post)
     return post
 
 def preprocess(post):
+
+    """
+    Preprocess a string by removing stop words, punctuation, and other unwanted characters.
+
+    Args:
+    - post: str, the input string to preprocess
+    
+    Returns:
+    - str, the preprocessed string
+    """
     
     clean_text = post.translate(str.maketrans("", "", string.punctuation))
     clean_text = clean_text.replace("\n", " ")
@@ -75,7 +129,6 @@ def preprocess(post):
     clean_text = clean_text.replace("”", "")
     clean_text = clean_text.replace("we", "")
     clean_text = clean_text.lower()
-    #stop_words = set(stopwords.words('english')) - {'we', 'i', 'you', 'our', 'himself', 'herself', 'him', 'hers', 'his', 'her', 'ourselves', 'themselves', 'ours'}
     names = ['díaz',"catherine","kasper",'cristian',"and", 'perez', "carla","acosta",'we','globant',"equinox","sebastian","juan","juan sebastián","favio","felipe","francisco","angie","jefferson",'1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
     stop_words = set(stopwords.words('english')+ names)
     clean_text = " ".join([word for word in clean_text.split() if word not in stop_words])
@@ -85,14 +138,44 @@ def preprocess(post):
 
 def rules(token):
 
+    """
+    Define rules for filtering tokens.
+
+    Args:
+    - token: spacy.Token, a token from a spacy document
+    
+    Returns:
+    - list of bools, a list of True or False values indicating whether the token passes the filtering rules or not
+    """
     return [not punct_space(token)] 
 
 def corpus_cleaning(posts):
+
+    """
+    Clean a corpus of posts by applying a set of rules to each token.
+
+    Args:
+    - posts: pandas.Series, a series of posts to clean
+    
+    Yields:
+    - str, a cleaned post from the input corpus
+    """
     
     for post in nlp.pipe(posts.apply(rm_pattern)):
         yield ' '.join([token.lemma_ for token in post if all(rules(token))])
 
 def main_token(json_name,column_name_corpus):
+
+    """
+    Clean and preprocess a corpus of posts, apply bigram model, and return the cleaned corpus.
+
+    Args:
+    - json_name: str, the name of the JSON file containing the corpus of posts
+    - column_name_corpus: str, the name of the column in the JSON file containing the posts
+    
+    Returns:
+    - list of str, a cleaned and preprocessed corpus of posts
+    """
 
     nltk.download('stopwords')
     df = pd.read_json(json_name)[:261]

@@ -6,14 +6,14 @@ def NLP_model(corpus, name_model):
     corpus_tok = [nltk.word_tokenize(sent) for sent in corpus]
 
     # Define los parámetros de tu modelo personalizado
-    vector_size = 10
-    window_size = 5
+    vector_size = 70
+    window_size = 25
 
     # Construye el vocabulario de tu modelo utilizando las palabras del corpus tokenizado
     model = Word2Vec(corpus_tok, vector_size=vector_size, window=window_size, min_count=2, workers=4)
 
     # Entrena el modelo Word2Vec con el corpus tokenizado
-    #model.train(corpus_tok, total_examples=len(corpus_tok), epochs=1000)
+    #model.train(corpus_tok, total_examples=len(corpus_tok), epochs=20)
 
     # Guarda el modelo entrenado para su uso posterior
     model.save(name_model)

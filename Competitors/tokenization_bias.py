@@ -54,26 +54,13 @@ def expand_contractions(s, contractions_dict=contractions_dict):
   return contractions_re.sub(replace, s)
 
 def clean_hashtag_url(post):
-    """
-    remove all hastags and website links from a string
-    """    
-
     return " ".join(word for word in post.split(' ') if ("#" not in word and "http" not in word))
 
 def punct_space(token):
-    """
-    helper function to eliminate tokens
-    that are pure punctuation or whitespace
-    """
-
     return token.is_punct or token.is_space
 
 def rm_pattern(post):
-    """
-    function returning a string without "...see more" and website links from the post. 
-    This function uses "re.sub" to remove a specific pattern"""
-
-    post = re.sub("…see more",'', post) # replace pattern by an empty string
+    post = re.sub("…see more",'', post) 
     post = re.sub('http','',post)
     return post
 
@@ -86,9 +73,10 @@ def preprocess(post):
     clean_text = clean_text.replace("▪", "")
     clean_text = clean_text.replace("’", "")
     clean_text = clean_text.replace("”", "")
+    clean_text = clean_text.replace("we", "")
     clean_text = clean_text.lower()
     #stop_words = set(stopwords.words('english')) - {'we', 'i', 'you', 'our', 'himself', 'herself', 'him', 'hers', 'his', 'her', 'ourselves', 'themselves', 'ours'}
-    names = ['díaz',"catherine","kasper",'cristian',"and", 'perez', "carla","acosta",'we','globant',"equinox","sebastian","juan","juan sebastián","favio","felipe","francisco","angie","jefferson"]
+    names = ['díaz',"catherine","kasper",'cristian',"and", 'perez', "carla","acosta",'we','globant',"equinox","sebastian","juan","juan sebastián","favio","felipe","francisco","angie","jefferson",'1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
     stop_words = set(stopwords.words('english')+ names)
     clean_text = " ".join([word for word in clean_text.split() if word not in stop_words])
     clean_text = " ".join(clean_text.split())
@@ -96,21 +84,10 @@ def preprocess(post):
     return clean_text
 
 def rules(token):
-    """
-    conditions to select a specific token for the corpus cleaning
-    used with all() function : return True if all True.
-    Conditions are : no pure puncuation - no pure whitespace - not a stopword 
-    - not a #word
-    """
 
     return [not punct_space(token)] 
 
 def corpus_cleaning(posts):
-    """
-    generator function using spaCy to parse posts,
-    remove "...see more" pattern, website links, lemmatize the text, lowercase words, and apply all the conditions we have set in rules.
-    What this function returns is a generator (a "list") of individual tokens contained in lists. 
-    """
     
     for post in nlp.pipe(posts.apply(rm_pattern)):
         yield ' '.join([token.lemma_ for token in post if all(rules(token))])
@@ -136,8 +113,6 @@ def main_token(json_name,column_name_corpus):
     for streamed_post in streamed_posts:
         post = ' '.join(streamed_post)
         all_posts.append(post)
-
-    # Process after cleaning
 
     df['descripcion_clean'] = all_posts
 
